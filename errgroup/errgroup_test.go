@@ -15,7 +15,7 @@ func TestNormal(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		m[i] = i
 	}
-	eg := WithContext(context.Background())
+	eg := WithContext(context.Background(), 0)
 	eg.Go(func(context.Context) (err error) {
 		m[1]++
 		return
@@ -35,11 +35,11 @@ func sleep1s(context.Context) error {
 	return nil
 }
 
-func TestGOMAXPROCS(t *testing.T) {
+func TestLimit(t *testing.T) {
 	ctx := context.Background()
 
 	// 没有并发数限制
-	eg := WithContext(ctx)
+	eg := WithContext(ctx, 0)
 	now := time.Now()
 	eg.Go(sleep1s)
 	eg.Go(sleep1s)
@@ -53,8 +53,7 @@ func TestGOMAXPROCS(t *testing.T) {
 	}
 
 	// 限制并发数
-	eg2 := WithContext(ctx)
-	eg2.GOMAXPROCS(2)
+	eg2 := WithContext(ctx, 2)
 	now = time.Now()
 	eg2.Go(sleep1s)
 	eg2.Go(sleep1s)
@@ -68,8 +67,7 @@ func TestGOMAXPROCS(t *testing.T) {
 	}
 
 	// context canceled
-	eg3 := WithContext(ctx)
-	eg3.GOMAXPROCS(2)
+	eg3 := WithContext(ctx, 2)
 	eg3.Go(func(context.Context) error {
 		return errors.New("error for testing errgroup context")
 	})
@@ -88,7 +86,7 @@ func TestGOMAXPROCS(t *testing.T) {
 }
 
 func TestRecover(t *testing.T) {
-	eg := WithContext(context.Background())
+	eg := WithContext(context.Background(), 1)
 	eg.Go(func(context.Context) (err error) {
 		panic("oh my god!")
 	})
@@ -114,7 +112,7 @@ func TestZeroGroup(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		eg := WithContext(context.Background())
+		eg := WithContext(context.Background(), 0)
 
 		var firstErr error
 		for i, err := range tc.errs {
