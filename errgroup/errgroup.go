@@ -55,12 +55,11 @@ func WithContext(ctx context.Context, limit int) ErrGroup {
 	ctx, cancel := context.WithCancelCause(ctx)
 
 	g := &group{
-		remain: limit,
-
 		ctx:    ctx,
 		cancel: cancel,
 	}
 	if limit > 0 {
+		g.remain = limit
 		g.ch = make(chan func(context.Context) error)
 	}
 	return g
