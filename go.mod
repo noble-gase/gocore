@@ -8,7 +8,7 @@ require (
 	github.com/apache/rocketmq-client-go/v2 v2.1.2
 	github.com/bytedance/sonic v1.12.2
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
-	github.com/eclipse/paho.mqtt.golang v1.4.3
+	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/fatih/color v1.16.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-basic/ipv4 v1.0.0
@@ -49,8 +49,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.34.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.27.0
-	golang.org/x/sync v0.16.0
-	golang.org/x/text v0.28.0
+	golang.org/x/sync v0.17.0
+	golang.org/x/text v0.29.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250811160224-6b04f9b4fc78
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250811160224-6b04f9b4fc78
 	google.golang.org/grpc v1.71.0
@@ -95,7 +95,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -148,11 +148,11 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/term v0.35.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
