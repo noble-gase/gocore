@@ -36,7 +36,7 @@ type group struct {
 	cache []func(ctx context.Context) error
 
 	ctx    context.Context
-	cancel context.CancelFunc
+	cancel context.CancelCauseFunc
 }
 
 // WithContext returns a new ErrGroup that is associated with a derived Context.
@@ -49,10 +49,10 @@ type group struct {
 // to at most 'limit'. Additional functions passed to Go will be queued
 // and executed only when running goroutines complete.
 //
-// The derived Context is created with context.WithCancel, so the
+// The derived Context is created with context.WithCancelCause, so the
 // cancellation reason is preserved and can be retrieved via context.Cause.
 func WithContext(ctx context.Context, limit int) ErrGroup {
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancelCause(ctx)
 
 	g := &group{
 		remain: limit,
@@ -94,7 +94,7 @@ func (g *group) Wait() error {
 		select {
 		case <-g.ctx.Done():
 		default:
-			g.cancel()
+			g.cancel(nil)
 		}
 		if g.ch != nil {
 			close(g.ch) // let all receiver exit
@@ -130,7 +130,7 @@ func (g *group) do(fn func(ctx context.Context) error) {
 		if err != nil {
 			g.once.Do(func() {
 				g.err = err
-				g.cancel()
+				g.cancel(err)
 			})
 		}
 		g.wg.Done()

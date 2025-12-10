@@ -12,7 +12,7 @@ import (
 
 func TestNormal(t *testing.T) {
 	m := make(map[int]int)
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		m[i] = i
 	}
 	eg := WithContext(context.Background(), 0)
@@ -75,7 +75,7 @@ func TestLimit(t *testing.T) {
 		time.Sleep(time.Second)
 		select {
 		case <-ctx.Done():
-			t.Log("caused by", ctx.Err())
+			t.Log("caused by", context.Cause(ctx))
 		default:
 		}
 		return nil
