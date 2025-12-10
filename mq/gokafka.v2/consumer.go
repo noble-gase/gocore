@@ -68,10 +68,6 @@ func NewConsumer(conf kafka.ReaderConfig) *Consumer {
 }
 
 func (c *Consumer) Handle(ctx context.Context, handle func(msg kafka.Message) error) error {
-	var lastMessage kafka.Message
-
-	defer c.Reader.CommitMessages(c.ctx, lastMessage)
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -87,21 +83,17 @@ func (c *Consumer) Handle(ctx context.Context, handle func(msg kafka.Message) er
 			// io.ErrClosedPipe means committing messages on the consumer,
 			// kafka will refire the messages on uncommitted messages, ignore
 			if err == io.EOF || err == io.ErrClosedPipe {
-				glog.WarnC(ctx, "Kafka Consumer FetchMessage failed, err=%+v(the reader has been closed)", err)
+				glog.WarnC(ctx, "Kafka Consumer ReadMessage failed, err=%+v(the reader has been closed)", err)
 				return nil
 			}
 			if err != nil {
-				glog.ErrorC(ctx, "Kafka Consumer FetchMessage failed, err=%+v", err)
+				glog.ErrorC(ctx, "Kafka Consumer ReadMessage failed, err=%+v", err)
 				continue
 			}
 
-			lastMessage = msg
-			// commit message after read message
-			if ackErr := c.Reader.CommitMessages(ctx, msg); ackErr != nil {
-				glog.ErrorC(ctx, "Kafka Consumer CommitMessages failed, err=%+v", ackErr)
-			}
-
 			startTime := time.Now()
+
+			metricsDelay.WithLabelValues(msg.Topic).Observe(float64(time.Since(msg.Time).Milliseconds()))
 
 			result := "success"
 			if err = handle(msg); err != nil {
@@ -110,7 +102,6 @@ func (c *Consumer) Handle(ctx context.Context, handle func(msg kafka.Message) er
 			metricsResult.WithLabelValues(msg.Topic, sub, result).Inc()
 
 			metricReqDuration.WithLabelValues(msg.Topic, sub).Observe(float64(time.Since(startTime).Milliseconds()))
-			metricsDelay.WithLabelValues(msg.Topic).Observe(float64(time.Since(msg.Time).Milliseconds()))
 		}
 	}
 }
@@ -118,10 +109,11 @@ func (c *Consumer) Handle(ctx context.Context, handle func(msg kafka.Message) er
 func (c *Consumer) Close() error {
 	c.cancel()
 
-	if err := c.Reader.Close(); err != nil {
+	err := c.Reader.Close()
+	if err != nil {
 		glog.ErrorF("Kafka Consumer close error:%v, conf:%#v", err, c.Reader.Config())
-		return err
+	} else {
+		glog.InfoF("Kafka Consumer close success, conf:%#v", c.Reader.Config())
 	}
-	glog.InfoF("Kafka Consumer close success, conf:%#v", c.Reader.Config())
-	return nil
+	return err
 }
