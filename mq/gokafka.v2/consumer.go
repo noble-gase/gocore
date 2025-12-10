@@ -111,9 +111,9 @@ func (c *Consumer) Close() error {
 
 	err := c.Reader.Close()
 	if err != nil {
-		glog.ErrorF("Kafka Consumer close error:%v, conf:%#v", err, c.Reader.Config())
+		glog.ErrorF("Kafka Consumer close failed, err=%v, conf=%#v", err, c.Reader.Config())
 	} else {
-		glog.InfoF("Kafka Consumer close success, conf:%#v", c.Reader.Config())
+		glog.InfoF("Kafka Consumer close success, conf=%#v", c.Reader.Config())
 	}
 	return err
 }
