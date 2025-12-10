@@ -13,14 +13,11 @@ import (
 // A zero Group is valid, has no limit on the number of active goroutines,
 // and does not cancel on error. use WithContext instead.
 type ErrGroup interface {
-	// Go calls the given function in a new goroutine.
+	// Go calls the given function in a goroutine.
 	//
 	// The first call to return a non-nil error cancels the group; its error will be
 	// returned by Wait.
 	Go(fn func(ctx context.Context) error)
-
-	// GOMAXPROCS set max goroutine to work.
-	GOMAXPROCS(n int)
 
 	// Wait blocks until all function calls from the Go method have returned, then
 	// returns the first non-nil error (if any) from them.
@@ -39,24 +36,33 @@ type group struct {
 	cache []func(ctx context.Context) error
 
 	ctx    context.Context
-	cancel context.CancelFunc
+	cancel context.CancelCauseFunc
 }
 
-// WithContext returns a new group with a canceled Context derived from ctx.
+// WithContext returns a new ErrGroup that is associated with a derived Context.
 //
-// The derived Context is canceled the first time a function passed to Go
-// returns a non-nil error or the first time Wait returns, whichever occurs first.
-func WithContext(ctx context.Context) ErrGroup {
-	ctx, cancel := context.WithCancel(ctx)
-	return &group{ctx: ctx, cancel: cancel}
-}
+// The returned group's Context is canceled in the following cases:
+//   - The first time a goroutine started with Go returns a non-nil error.
+//   - Or when Wait is called and returns.
+//
+// If limit > 0, the group restricts the number of active goroutines
+// to at most 'limit'. Additional functions passed to Go will be queued
+// and executed only when running goroutines complete.
+//
+// The derived Context is created with context.WithCancelCause, so the
+// cancellation reason is preserved and can be retrieved via context.Cause.
+func WithContext(ctx context.Context, limit int) ErrGroup {
+	ctx, cancel := context.WithCancelCause(ctx)
 
-func (g *group) GOMAXPROCS(n int) {
-	if n <= 0 {
-		return
+	g := &group{
+		ctx:    ctx,
+		cancel: cancel,
 	}
-	g.remain = n
-	g.ch = make(chan func(context.Context) error)
+	if limit > 0 {
+		g.remain = limit
+		g.ch = make(chan func(context.Context) error)
+	}
+	return g
 }
 
 func (g *group) Go(fn func(ctx context.Context) error) {
@@ -87,7 +93,7 @@ func (g *group) Wait() error {
 		select {
 		case <-g.ctx.Done():
 		default:
-			g.cancel()
+			g.cancel(nil)
 		}
 		if g.ch != nil {
 			close(g.ch) // let all receiver exit
@@ -123,7 +129,7 @@ func (g *group) do(fn func(ctx context.Context) error) {
 		if err != nil {
 			g.once.Do(func() {
 				g.err = err
-				g.cancel()
+				g.cancel(err)
 			})
 		}
 		g.wg.Done()
